@@ -55,6 +55,8 @@ namespace LiteDB.Engine
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
+                // _dataPool.Writer.Value懒加载
+                // Lazy<T>是把 “对象的创建时机” 推迟到第一次使用时，同时保证线程安全 —— 它内部会处理多线程同时访问.Value 的情况，只会执行一次创建逻辑
                 this.Initialize(_dataPool.Writer.Value, settings.Collation, settings.InitialSize);
             }
 
