@@ -1,9 +1,11 @@
-﻿using System;
+﻿using FluentAssertions;
+using FluentAssertions.Equivalency;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using FluentAssertions;
 using Xunit;
+using LiteDB;
 
 namespace LiteDB.Tests.Test
 {
@@ -12,7 +14,6 @@ namespace LiteDB.Tests.Test
         [Fact]
         public void Test1()
         {
-            // 替换原来的内存数据库或临时文件代码
             using (var db = new LiteDatabase(@"D:\Net\mytest.db"))
             {
                 var col = db.GetCollection<Customer>("customers");
