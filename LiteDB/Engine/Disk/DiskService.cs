@@ -139,6 +139,7 @@ namespace LiteDB.Engine
                 stream.SetLength(initialSize);
             }
 
+            //强制把操作系统缓存里的数据，立刻、马上、真正写入物理硬盘，确保数据永不丢失！
             stream.FlushToDisk();
         }
 
