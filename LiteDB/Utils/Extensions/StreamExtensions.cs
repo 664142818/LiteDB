@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Pipes;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -13,10 +14,13 @@ namespace LiteDB
         {
             if (stream is FileStream fstream)
             {
+                // 标准：强制写入物理磁盘
+                // 关键：true = 刷新到磁盘（而非仅系统缓存）
                 fstream.Flush(true);
             }
             else
             {
+                //操作系统缓存
                 stream.Flush();
             }
         }
