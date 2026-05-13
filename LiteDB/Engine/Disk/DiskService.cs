@@ -128,6 +128,8 @@ namespace LiteDB.Engine
             //把你在 Header 上改的所有内容，刷新到底层的 byte [] 缓冲区里。
             header.UpdateBuffer();
 
+            //把内存里整理好的【完整 8KB 头页数据】，一次性写入到磁盘文件里，永久保存！
+            //翻译成人话：把 buffer 里的 8192 个字节从第 0 位开始全部写入 磁盘文件！
             stream.Write(buffer.Array, buffer.Offset, PAGE_SIZE);
 
             if (initialSize > 0)

@@ -159,11 +159,14 @@ namespace LiteDB.Engine
             {
                 //var area = _buffer.Slice(开始位置, 占用空间);
                 //把头页从 192 字节开始，切出 8000 字节，专门存表结构
+                //_buffer = 一整本书（8KB） area = 从第192页开始，撕出8000页的一叠纸 BufferWriter = 一支笔
                 var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
                 //把 “数据库所有表 / 集合的信息” 序列化写入缓冲区
                 using (var w = new BufferWriter(area))
                 {
+                    //把 “数据库里所有表 / 集合的清单”，转换成标准的 BSON 二进制格式，写入到头页 192 开始的位置。
+                    //把头页里 “有哪些表” 这件事，永久保存下来。
                     w.WriteDocument(_collections, true);
                 }
 

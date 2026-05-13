@@ -361,15 +361,20 @@ namespace LiteDB.Engine
         /// </summary>
         public int WriteDocument(BsonDocument value, bool recalc)
         {
+            // 1. 计算这个文档总共需要多少字节
             var bytesCount = value.GetBytesCount(recalc);
 
+            // 2. 先写入【文档总长度】（4字节 int）
             this.Write(bytesCount);
 
+            // 3. 遍历所有键值对，逐个写入
             foreach (var el in value.GetElements())
             {
+                //{ name: "张三", age: 20 }  就会循环 2 次： name -> 张三 age -> 20
                 this.WriteElement(el.Key, el.Value);
             }
 
+            // 4. 写入结尾标志 0x00（BSON 规范要求）
             this.Write((byte)0x00);
 
             return bytesCount;
