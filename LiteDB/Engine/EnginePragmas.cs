@@ -158,13 +158,17 @@ namespace LiteDB.Engine
 
         public void UpdateBuffer(BufferSlice buffer)
         {
+            // 如果没改动，直接返回（高性能）
             if (_isDirty == false) return;
 
-            foreach(var pragma in _pragmas)
+            // 遍历所有配置项（排序规则、版本、参数...）
+            foreach (var pragma in _pragmas)
             {
+                // 把每一项配置 → 写入二进制缓冲区
                 pragma.Value.Write(buffer);
             }
 
+            // 标记：已同步完成，干净了
             _isDirty = false;
         }
 

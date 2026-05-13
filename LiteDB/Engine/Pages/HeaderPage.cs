@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using static LiteDB.Constants;
 
@@ -150,6 +151,12 @@ namespace LiteDB.Engine
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
 
             // update engine pragmas
+            //// 1. 设置排序规则（存在内存里）
+            //header.Pragmas.Set(Pragmas.COLLATION, ..., false);
+            //// 2. ✅ 这一行：把内存里的配置 → 写入 byte[]
+            //this.Pragmas.UpdateBuffer(_buffer);
+
+            //头页缓冲区： [32-58] 头部信息 [59]    版本 [60-63] 空闲页 [64-67] 最后一页 [ ... ... ] [XXX-XXX] PRAGMAS 配置区  ← 这行就写在这里！
             this.Pragmas.UpdateBuffer(_buffer);
 
             // update collection only if needed
