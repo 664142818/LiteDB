@@ -18,6 +18,8 @@ namespace LiteDB.Tests.Test
             {
                 var col = db.GetCollection<Customer>("customers");
                 var customer = new Customer { Name = "John Doe", Phones = new[] { "8000-0000" }, IsActive = true };
+                col.EnsureIndex(x => x.Id, unique: true);
+                col.EnsureIndex(x => x.Name);
                 col.Insert(customer);
             }
         }
