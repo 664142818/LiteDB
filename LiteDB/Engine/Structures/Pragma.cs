@@ -14,6 +14,7 @@ namespace LiteDB.Engine
         public Action<BsonValue> Set { get; set; }
         public Action<BufferSlice> Read { get; set; }
         public Action<BsonValue, HeaderPage> Validate { get; set; }
+        //一个可替换、可插拔的写入函数    =你给它什么写入逻辑，它就干什么   =调用它就写入数据
         public Action<BufferSlice> Write { get; set; }
     }
 }

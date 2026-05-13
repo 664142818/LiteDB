@@ -27,11 +27,11 @@ namespace LiteDB.Engine
 
         #region Buffer Field Positions
 
-        public const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)
-        public const int P_FILE_VERSION = 59; // 59-59 (1 byte)
-        public const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
-        public const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
-        public const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
+        public const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)  存什么：头部基础信息（魔数、标记、库版本等）
+        public const int P_FILE_VERSION = 59; // 59-59 (1 byte) 存什么：数据库文件版本号（用来判断是否兼容）
+        public const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes) 存什么：空闲页链表的第一个页 ID → 数据库知道 “哪里有空位可以写数据”
+        public const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes) 存什么：文件最后一页的页号 → 知道数据库文件有多大  它存的是：当前数据库文件里，已经使用的「最后一页的页号」
+        public const int P_CREATION_TIME = 68; // 68-75 (8 bytes) 存什么：数据库创建时间
 
         // private const int P_PRAGMAS = 76; // 76-190 (115 bytes)
         public const int P_INVALID_DATAFILE_STATE = 191; // 191-191 (1 byte)
@@ -139,7 +139,14 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
+            //把 “空闲空页链表的第一个页号”，写入到底层缓冲区的 60~63 字节位置。P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes) 
+            //缓冲区[60...63] = this.FreeEmptyPageList; 
+            //终极记忆口诀:FreeEmptyPageList = 我下一页该用哪一页  P_FREE_EMPTY_PAGE_ID = 存在头页 60~63
+            //这就是 嵌入式数据库（LiteDB / SQLite 类） 最核心的空闲页管理机制！
+            // 记录：哪里有空位置可以复用
             _buffer.Write(this.FreeEmptyPageList, P_FREE_EMPTY_PAGE_ID);
+            // 把「当前数据库最后一页的编号」，写入到底层缓冲区的 64~67 字节位置。 P_LAST_PAGE_ID = 64; // 64-67 (4 bytes) 
+            // 记录：文件现在有多大，最后一页是哪页
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
 
             // update engine pragmas
