@@ -97,16 +97,35 @@ namespace LiteDB.Engine
         /// </summary>
         private void Initialize(Stream stream, Collation collation, long initialSize)
         {
+            //// 1. 创建内存页
+            //var buffer = new PageBuffer(...);
+            //// 2. 创建头页
+            //var header = new HeaderPage(buffer, 0);
+            //// 3. 修改头页（排序规则等）
+            //header.Pragmas.Set(...);
+            //// 4. ✅ 必须调用：把修改同步到 buffer
+            //header.UpdateBuffer();
+            //// 5. 才能写入磁盘
+            //stream.Write(... );
+
+
             //创建一页内存缓冲区  分配一页大小的字节数组，比如 4KB / 8KB / 16KB（数据库标准页大小）。
             //分配一页大小的字节数组，比如 4KB / 8KB / 16KB（数据库标准页大小）。
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
-
+            //一句话总结：把一块内存（buffer），变成整个数据库文件的「第 0 页 —— 头部页」。
+            //数据库文件永远 第 0 页是头部页
+            //告诉 HeaderPage：你就用这块 buffer 读写。这是第 0 页，是文件头。文件：[ 第0页(头部) ] [ 数据页1 ] [ 数据页2 ] [ 数据页3 ] ...
+            //等于：拿一块 4KB 内存 → 做成文件的第一张名片（头部）。
+            //创建一个头部页对象，管理第 0 页的内存，用来存整个数据库的元信息。
             var header = new HeaderPage(buffer, 0);
 
             // update collation
+            //一句话总结：给数据库的头部页，设置 “字符串排序规则”，没有就用默认，有就不覆盖。
+            //header.Pragmas.Set(排序规则键, 最终排序规则, 不覆盖已存在的值);
             header.Pragmas.Set(Pragmas.COLLATION, (collation ?? Collation.Default).ToString(), false);
 
             // update buffer
+            //把你在 Header 上改的所有内容，刷新到底层的 byte [] 缓冲区里。
             header.UpdateBuffer();
 
             stream.Write(buffer.Array, buffer.Offset, PAGE_SIZE);
