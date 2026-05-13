@@ -26,6 +26,9 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
+        //ArrayPool<T> 是 .NET 专门用来复用数组的对象池，核心目的是：减少内存分配、降低 GC 压力，让程序更快、更稳定。 
+        //不用反复 new byte [] /new char []，而是从池里 “借” 数组，用完 “还” 回去，避免频繁 GC。
+        //byte[] buffer = new byte[4096]; // 每次都分配新内存  问题：  频繁创建 → 大量小对象垃圾 GC 频繁回收 → 程序卡顿、性能下降
         private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         public DiskService(
