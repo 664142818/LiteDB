@@ -1,11 +1,5 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -37,8 +31,8 @@ namespace LiteDB.Engine
         // private const int P_PRAGMAS = 76; // 76-190 (115 bytes)
         public const int P_INVALID_DATAFILE_STATE = 191; // 191-191 (1 byte)
 
-        public const int P_COLLECTIONS = 192; // 192-8159 (8064 bytes)
-        public const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
+        public const int P_COLLECTIONS = 192; // 192-8159 (8064 bytes)  // 从第192字节开始
+        public const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each  // 占用8000字节  意思：给表结构预留 8000 字节的超大空间 注释写了： // 250 blocks with 32 bytes each → 最多支持 250 张表 / 集合
 
         #endregion
 
@@ -160,10 +154,15 @@ namespace LiteDB.Engine
             this.Pragmas.UpdateBuffer(_buffer);
 
             // update collection only if needed
+            //只有当 “数据库里有哪些表 / 集合” 发生变化时，才把表结构信息写入头页缓冲区；没变化就不写，高性能。
             if (_isCollectionsChanged)
             {
+                //从缓冲区的 P_COLLECTIONS 位置开始
+                //切出一块长度为 COLLECTIONS_SIZE 的区域
+                //var area = _buffer.Slice(开始位置, 占用空间);
                 var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
+                //把 “数据库所有表 / 集合的信息” 序列化写入缓冲区
                 using (var w = new BufferWriter(area))
                 {
                     w.WriteDocument(_collections, true);
@@ -217,7 +216,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<KeyValuePair<string, uint>> GetCollections()
         {
-            foreach(var el in _collections.GetElements())
+            foreach (var el in _collections.GetElements())
             {
                 yield return new KeyValuePair<string, uint>(el.Key, (uint)el.Value.AsInt32);
             }
