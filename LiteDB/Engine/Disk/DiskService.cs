@@ -29,6 +29,7 @@ namespace LiteDB.Engine
         //ArrayPool<T> 是 .NET 专门用来复用数组的对象池，核心目的是：减少内存分配、降低 GC 压力，让程序更快、更稳定。 
         //不用反复 new byte [] /new char []，而是从池里 “借” 数组，用完 “还” 回去，避免频繁 GC。
         //byte[] buffer = new byte[4096]; // 每次都分配新内存  问题：  频繁创建 → 大量小对象垃圾 GC 频繁回收 → 程序卡顿、性能下降
+        // 从数组池借一页，避免GC（高性能）
         private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         public DiskService(
@@ -66,6 +67,9 @@ namespace LiteDB.Engine
             // if not readonly, force open writable datafile
             if (settings.ReadOnly == false)
             {
+                // 提前触发 Writer 初始化，避免后面用时卡顿
+                // 等价于：我不在乎 CanRead 是 true 还是 false
+                // 我只想让 Writer.Value 被访问一次 → 强制完成初始化
                 _ = _dataPool.Writer.Value.CanRead;
             }
 
@@ -93,7 +97,10 @@ namespace LiteDB.Engine
         /// </summary>
         private void Initialize(Stream stream, Collation collation, long initialSize)
         {
+            //创建一页内存缓冲区  分配一页大小的字节数组，比如 4KB / 8KB / 16KB（数据库标准页大小）。
+            //分配一页大小的字节数组，比如 4KB / 8KB / 16KB（数据库标准页大小）。
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+
             var header = new HeaderPage(buffer, 0);
 
             // update collation
@@ -236,11 +243,13 @@ namespace LiteDB.Engine
             {
                 using (var stream = _dataFactory.GetStream(true, true))
                 {
+                    // 从数组池借一页，避免GC（高性能）
                     var buffer = _bufferPool.Rent(PAGE_SIZE);
                     stream.Read(buffer, 0, PAGE_SIZE);
                     buffer[HeaderPage.P_INVALID_DATAFILE_STATE] = 1;
                     stream.Position = 0;
                     stream.Write(buffer, 0, PAGE_SIZE);
+                    // 用完归还
                     _bufferPool.Return(buffer, true);
                 }
             });

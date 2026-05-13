@@ -42,6 +42,16 @@ namespace LiteDB.Engine
         /// </summary>
         public long Timestamp;
 
+        /// <summary>
+        /// 这是一个页包装类，作用：
+        //  管理字节数组
+        //  记录当前位置
+        //  记录已用长度
+        //  方便读写数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="uniqueID"></param>
         public PageBuffer(byte[] buffer, int offset, int uniqueID)
             : base(buffer, offset, PAGE_SIZE)
         {

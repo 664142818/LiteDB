@@ -21,6 +21,7 @@ namespace LiteDB
     {
         /// <summary>
         /// The size of each page in disk - use 8192 as all major databases
+        /// 磁盘、SSD、文件系统扇区基本都是 4KB 对齐，用 4/8/16KB 不会产生跨页读写、碎片浪费。
         /// </summary>
         public const int PAGE_SIZE = 8192;
 
