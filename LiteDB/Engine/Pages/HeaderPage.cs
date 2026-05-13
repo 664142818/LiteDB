@@ -157,9 +157,8 @@ namespace LiteDB.Engine
             //只有当 “数据库里有哪些表 / 集合” 发生变化时，才把表结构信息写入头页缓冲区；没变化就不写，高性能。
             if (_isCollectionsChanged)
             {
-                //从缓冲区的 P_COLLECTIONS 位置开始
-                //切出一块长度为 COLLECTIONS_SIZE 的区域
                 //var area = _buffer.Slice(开始位置, 占用空间);
+                //把头页从 192 字节开始，切出 8000 字节，专门存表结构
                 var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
                 //把 “数据库所有表 / 集合的信息” 序列化写入缓冲区
